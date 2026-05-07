@@ -13,14 +13,15 @@ function useGetShopByCity() {
       try {
         let result;
         if (!currentCity || currentCity === "null" || currentCity === "All") {
-          // ✅ Fetch ALL shops when "All" is selected or no city set
           result = await axios.get(`${serverUrl}/api/shop/get-all`, { withCredentials: true })
         } else {
           result = await axios.get(`${serverUrl}/api/shop/get-by-city/${currentCity}`, { withCredentials: true })
         }
-        dispatch(setShopsInMyCity(result.data))
+        const data = Array.isArray(result.data) ? result.data : []
+        dispatch(setShopsInMyCity(data))
       } catch (error) {
         console.log(error)
+        dispatch(setShopsInMyCity([]))
       }
     }
     fetchShops()
