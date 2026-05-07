@@ -7,12 +7,14 @@ import OwnerOrderCard from '../components/OwnerOrderCard';
 import ComplaintForm from '../components/ComplaintForm';
 import RatingModal from '../components/RatingModal';
 import { setMyOrders, updateOrderStatus, updateRealtimeOrderStatus } from '../redux/userSlice';
-
+import useGetMyOrders from '../hooks/useGetMyOrders';
 
 function MyOrders() {
   const { userData, myOrders, socket } = useSelector(state => state.user)
   const navigate = useNavigate()
   const dispatch = useDispatch()
+
+  useGetMyOrders()
 
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -37,61 +39,67 @@ function MyOrders() {
     }
   }, [socket])
 
-
   return (
     <div className='w-full min-h-screen bg-[#fff9f6] flex justify-center px-4'>
       <div className='w-full max-w-[800px] p-4 pb-20'>
 
-        <div className='flex items-center gap-[20px] mb-6 '>
-          <div className=' z-[10] cursor-pointer' onClick={() => navigate("/")}>
+        <div className='flex items-center gap-[20px] mb-6'>
+          <div className='z-[10] cursor-pointer' onClick={() => navigate("/")}>
             <IoIosArrowRoundBack size={35} className='text-[#ff4d2d]' />
           </div>
-          <h1 className='text-2xl font-bold  text-start'>My Orders</h1>
+          <h1 className='text-2xl font-bold text-start'>My Orders</h1>
         </div>
-        <div className='space-y-6'>
-          {myOrders?.map((order, index) => (
-            <div key={index} className='space-y-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
-              {userData.role == "user" ?
-                <UserOrderCard data={order} />
-                : userData.role == "owner" ?
-                  <OwnerOrderCard data={order} />
-                  : null
-              }
 
-              {userData.role === "user" && (
-                <div className='space-y-2 mt-4'>
-                  {order.shopOrders?.status === "delivered" && (
-                    <div className='flex flex-col gap-2'>
+        {myOrders?.length === 0 ? (
+          <div className='text-center text-gray-400 py-20 text-lg font-medium'>
+            No orders yet!
+          </div>
+        ) : (
+          <div className='space-y-6'>
+            {myOrders?.map((order, index) => (
+              <div key={index} className='space-y-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
+                {userData.role == "user" ?
+                  <UserOrderCard data={order} />
+                  : userData.role == "owner" ?
+                    <OwnerOrderCard data={order} />
+                    : null
+                }
+
+                {userData.role === "user" && (
+                  <div className='space-y-2 mt-4'>
+                    {order.shopOrders?.status === "delivered" && (
+                      <div className='flex flex-col gap-2'>
                         {ratedOrderIds.has(order._id) ? (
-                            <div className="w-full py-2 bg-green-50 text-green-600 font-bold rounded-xl text-center border border-green-100 italic">
-                                Rated ✓
-                            </div>
+                          <div className="w-full py-2 bg-green-50 text-green-600 font-bold rounded-xl text-center border border-green-100 italic">
+                            Rated
+                          </div>
                         ) : (
-                            <button 
-                                onClick={() => {
-                                    setSelectedOrder(order);
-                                    setShowRatingModal(true);
-                                }}
-                                className="w-full bg-[#fc8019] text-white py-2.5 rounded-xl font-bold hover:bg-[#e67316] transition-all shadow-md active:scale-95"
-                            >
-                                Rate Items
-                            </button>
+                          <button
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setShowRatingModal(true);
+                            }}
+                            className="w-full bg-[#fc8019] text-white py-2.5 rounded-xl font-bold hover:bg-[#e67316] transition-all shadow-md active:scale-95"
+                          >
+                            Rate Items
+                          </button>
                         )}
-                      <ComplaintForm orderId={order._id} shopId={order.shopOrders.shop?._id || order.shopOrders.shop} />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+                        <ComplaintForm orderId={order._id} shopId={order.shopOrders.shop?._id || order.shopOrders.shop} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {showRatingModal && selectedOrder && (
-            <RatingModal 
-                order={selectedOrder} 
-                onClose={() => setShowRatingModal(false)} 
-                onRefresh={() => setRatedOrderIds(prev => new Set(prev).add(selectedOrder._id))}
-            />
+          <RatingModal
+            order={selectedOrder}
+            onClose={() => setShowRatingModal(false)}
+            onRefresh={() => setRatedOrderIds(prev => new Set(prev).add(selectedOrder._id))}
+          />
         )}
       </div>
     </div>
