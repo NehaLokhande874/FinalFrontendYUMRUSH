@@ -13,14 +13,15 @@ function useGetItemsByCity() {
       try {
         let result;
         if (!currentCity || currentCity === "null" || currentCity === "All") {
-          // ✅ Call get-all-items when All Cities selected
           result = await axios.get(`${serverUrl}/api/item/get-all-items`, { withCredentials: true })
         } else {
           result = await axios.get(`${serverUrl}/api/item/get-by-city/${currentCity}`, { withCredentials: true })
         }
-        dispatch(setItemsInMyCity(result.data))
+        const data = Array.isArray(result.data) ? result.data : []
+        dispatch(setItemsInMyCity(data))
       } catch (error) {
         console.log(error)
+        dispatch(setItemsInMyCity([]))
       }
     }
     fetchItems()
