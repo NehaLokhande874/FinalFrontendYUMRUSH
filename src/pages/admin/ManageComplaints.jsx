@@ -201,7 +201,7 @@ export default function ManageComplaints() {
                                         {/* Restaurant */}
                                         <td className="p-4">
                                             <div className="font-bold text-gray-700 text-sm">
-                                                {c?.restaurantId?.shopName || "N/A"}
+                                                {c?.restaurantId?.name || "N/A"}
                                             </div>
                                         </td>
 

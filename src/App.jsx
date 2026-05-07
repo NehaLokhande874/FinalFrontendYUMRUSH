@@ -121,7 +121,7 @@ function App() {
         <Route path='/admin/shops' element={<ManageShops />} />
         <Route path='/admin/delivery-partners' element={<ManageDeliveryPartners />} />
         <Route path='/admin/orders' element={<ManageOrders />} />
-        <Route path='/admin/complaints' element={isAdmin ? <ManageComplaints /> : <Navigate to={"/"} />} />
+        <Route path='/admin/complaints' element={<ManageComplaints />} />
         <Route path='/admin/offers' element={<ManageOffers />} />
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
