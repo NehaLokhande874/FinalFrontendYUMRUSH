@@ -50,21 +50,18 @@ function UserDashboard() {
   }
 
   useEffect(() => {
-    // ? Fixed: check BOTH refs before adding listeners
     if (cateScrollRef.current) {
       updateButton(cateScrollRef, setShowLeftCateButton, setShowRightCateButton)
       cateScrollRef.current.addEventListener('scroll', () => {
         updateButton(cateScrollRef, setShowLeftCateButton, setShowRightCateButton)
       })
     }
-
     if (shopScrollRef.current) {
       updateButton(shopScrollRef, setShowLeftShopButton, setShowRightShopButton)
       shopScrollRef.current.addEventListener('scroll', () => {
         updateButton(shopScrollRef, setShowLeftShopButton, setShowRightShopButton)
       })
     }
-
     return () => {
       cateScrollRef?.current?.removeEventListener("scroll", () => {
         updateButton(cateScrollRef, setShowLeftCateButton, setShowRightCateButton)
@@ -73,9 +70,8 @@ function UserDashboard() {
         updateButton(shopScrollRef, setShowLeftShopButton, setShowRightShopButton)
       })
     }
-  }, [categories, shopInMyCity]) // ? Fixed: added shopInMyCity so it re-runs when shops load
+  }, [categories, shopInMyCity])
 
-  // ? Show loading state while city is being detected
   if (!currentCity) {
     return (
       <div className='w-full flex flex-col gap-8 items-center'>
@@ -90,7 +86,6 @@ function UserDashboard() {
   return (
     <div className='w-full flex flex-col gap-8 items-center'>
       <Nav />
-
       {searchItems !== null ? (
         <div className="w-full max-w-7xl flex flex-col gap-6 items-start px-4 sm:px-8 mt-2">
           <h1 className='text-gray-900 text-2xl sm:text-3xl font-bold border-b border-gray-200 pb-3 w-full'>
@@ -98,7 +93,7 @@ function UserDashboard() {
           </h1>
           {searchItems.length === 0 ? (
             <div className='w-full text-center text-gray-500 py-16 text-xl font-medium'>
-              No results found ??
+              No results found
             </div>
           ) : (
             Object.values(searchItems.reduce((acc, item) => {
@@ -112,19 +107,19 @@ function UserDashboard() {
               <div key={group.shop._id} className="w-full mb-6 bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-orange-50/50 p-5 border-b border-orange-100 gap-4">
                   <div className="flex items-center gap-4">
-                    <img src={group.shop.image} alt={group.shop.shopName} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover shadow-sm border-2 border-white" />
+                    <img src={group.shop.image} alt={group.shop.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover shadow-sm border-2 border-white" />
                     <div>
                       <h2 className="text-xl sm:text-2xl font-black text-gray-800 hover:text-[#fc8019] cursor-pointer transition-colors" onClick={() => navigate(`/shop/${group.shop._id}`)}>
-                        {group.shop.shopName}
+                        {group.shop.name}
                       </h2>
-                      <p className="text-sm text-gray-500 font-medium">?? {group.shop.city} • {group.items.length} items matches query</p>
+                      <p className="text-sm text-gray-500 font-medium">{group.shop.city} - {group.items.length} items match query</p>
                     </div>
                   </div>
                   <button
                     className="w-full sm:w-auto bg-[#fc8019] text-white px-6 py-2.5 rounded-full font-bold shadow-md hover:bg-[#e47317] hover:shadow-lg transition-all whitespace-nowrap"
                     onClick={() => navigate(`/shop/${group.shop._id}`)}
                   >
-                    View Restaurant ?
+                    View Restaurant
                   </button>
                 </div>
                 <div className='w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6'>
@@ -150,23 +145,20 @@ function UserDashboard() {
               {showRightCateButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#fc8019] text-white p-2 text-xl rounded-full shadow-lg hover:bg-[#e47317] z-10 transition-colors' onClick={() => scrollHandler(cateScrollRef, "right")}><FaCircleChevronRight /></button>}
             </div>
           </div>
-
           <div className='w-full max-w-7xl flex flex-col gap-5 items-start px-4 sm:px-8 border-t border-gray-100 pt-8 mt-2'>
             <h1 className='text-gray-800 text-2xl sm:text-3xl font-bold'>Best Shop in {currentCity}</h1>
             <div className='w-full relative'>
               {showLeftShopButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#fc8019] text-white p-2 text-xl rounded-full shadow-lg hover:bg-[#e47317] z-10 transition-colors' onClick={() => scrollHandler(shopScrollRef, "left")}><FaCircleChevronLeft /></button>}
               <div className='w-full flex overflow-x-auto gap-4 pb-2 scrollbar-hide' ref={shopScrollRef}>
                 {shopInMyCity?.length > 0 ? shopInMyCity.map((shop, index) => (
-                  <CategoryCard name={shop.shopName} image={shop.image} key={index} onClick={() => navigate(`/shop/${shop._id}`)} />
+                  <CategoryCard name={shop.name} image={shop.image} key={index} onClick={() => navigate(`/shop/${shop._id}`)} />
                 )) : (
-                  // ? Fixed: show message instead of empty/broken UI
                   <p className='text-gray-400 font-medium py-4'>No shops found in {currentCity} yet.</p>
                 )}
               </div>
               {showRightShopButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#fc8019] text-white p-2 text-xl rounded-full shadow-lg hover:bg-[#e47317] z-10 transition-colors' onClick={() => scrollHandler(shopScrollRef, "right")}><FaCircleChevronRight /></button>}
             </div>
           </div>
-
           <div className='w-full max-w-7xl flex flex-col gap-5 items-start px-4 sm:px-8 border-t border-gray-100 pt-8 mt-2 mb-16'>
             <h1 className='text-gray-800 text-2xl sm:text-3xl font-bold'>Suggested Food Items</h1>
             <div className='w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8'>
