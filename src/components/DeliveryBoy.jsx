@@ -14,26 +14,22 @@ import { MdClose } from "react-icons/md"
 function DeliveryBoy() {
     const { userData, socket } = useSelector(state => state.user)
     const [currentOrder, setCurrentOrder] = useState()
-    const [showOtpBox, setShowOtpBox] = useState(false)
     const [availableAssignments, setAvailableAssignments] = useState(null)
-    const [otp, setOtp] = useState("")
     const [todayDeliveries, setTodayDeliveries] = useState([])
     const [deliveryBoyLocation, setDeliveryBoyLocation] = useState(null)
     const [loading, setLoading] = useState(false)
-    const [message, setMessage] = useState("")
+    const [deliveredMsg, setDeliveredMsg] = useState("")
     const [isSimulating, setIsSimulating] = useState(false)
     const simulationRef = useRef(null)
     const [earningFlash, setEarningFlash] = useState(0)
     const [extraEarning, setExtraEarning] = useState(0)
-
     const [isChatOpen, setIsChatOpen] = useState(false)
     const [chatMessages, setChatMessages] = useState([])
     const [chatInput, setChatInput] = useState("")
     const [unreadCount, setUnreadCount] = useState(0)
     const chatEndRef = useRef(null)
-
-    // FIX: ref to avoid stale closure in socket listener
     const isChatOpenRef = useRef(isChatOpen)
+
     useEffect(() => {
         isChatOpenRef.current = isChatOpen
     }, [isChatOpen])
@@ -61,7 +57,6 @@ function DeliveryBoy() {
             currentOrder?.deliveryBoyLocation?.lon ?? 0
         )
         if (Number.isNaN(baseLat) || Number.isNaN(baseLng)) return
-
         setIsSimulating(true)
         let simLat = baseLat
         let simLng = baseLng
@@ -126,7 +121,7 @@ function DeliveryBoy() {
             const result = await axios.get(`${serverUrl}/api/order/get-current-order`, { withCredentials: true })
             setCurrentOrder(result.data)
         } catch (error) {
-            console.log(error)
+            setCurrentOrder(null)
         }
     }
 
@@ -135,8 +130,39 @@ function DeliveryBoy() {
             const result = await axios.get(`${serverUrl}/api/order/accept-order/${assignmentId}`, { withCredentials: true })
             console.log(result.data)
             await getCurrentOrder()
+            await getAssignments()
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    const markAsDelivered = async () => {
+        if (!currentOrder?._id || !currentOrder?.shopOrder?._id) return
+        setLoading(true)
+        setDeliveredMsg("")
+        try {
+            const result = await axios.post(
+                `${serverUrl}/api/order/update-delivery-status`,
+                {
+                    orderId: currentOrder._id,
+                    shopOrderId: currentOrder.shopOrder._id,
+                    status: "delivered"
+                },
+                { withCredentials: true }
+            )
+            console.log(result.data)
+            setDeliveredMsg("Order Delivered Successfully!")
+            stopSimulation()
+            setTimeout(() => {
+                handleTodayDeliveries()
+                setCurrentOrder(null)
+                setDeliveredMsg("")
+            }, 1500)
+        } catch (error) {
+            console.log(error)
+            setDeliveredMsg("Failed to mark as delivered. Try again.")
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -159,19 +185,27 @@ function DeliveryBoy() {
         const onChatMessage = (msg) => {
             if (String(msg?.orderId) !== String(currentOrder?._id)) return
             setChatMessages(prev => [...prev, msg])
-            // FIX: use ref to avoid stale closure
             if (!isChatOpenRef.current && String(msg.senderId) !== String(userData?._id)) {
                 setUnreadCount(prev => prev + 1)
+            }
+        }
+        const onOrderStatusUpdate = ({ orderId, status }) => {
+            if (String(orderId) === String(currentOrder?._id) && status === "delivered") {
+                handleTodayDeliveries()
             }
         }
         socket.on("earnings-update", onEarningUpdate)
         socket.on("chat-history", onChatHistory)
         socket.on("chat-message", onChatMessage)
+        socket.on("order-status-update", onOrderStatusUpdate)
+        socket.on("update-status", onOrderStatusUpdate)
         return () => {
             socket.off('newAssignment')
             socket.off("earnings-update", onEarningUpdate)
             socket.off("chat-history", onChatHistory)
             socket.off("chat-message", onChatMessage)
+            socket.off("order-status-update", onOrderStatusUpdate)
+            socket.off("update-status", onOrderStatusUpdate)
         }
     }, [socket, currentOrder?._id, userData?._id])
 
@@ -191,43 +225,10 @@ function DeliveryBoy() {
         chatEndRef.current.scrollIntoView({ behavior: "smooth" })
     }, [chatMessages, isChatOpen])
 
-    const sendOtp = async () => {
-        setLoading(true)
-        try {
-            const result = await axios.post(`${serverUrl}/api/order/send-delivery-otp`, {
-                orderId: currentOrder._id,
-                shopOrderId: currentOrder.shopOrder._id
-            }, { withCredentials: true })
-            setLoading(false)
-            setShowOtpBox(true)
-            console.log(result.data)
-        } catch (error) {
-            console.log(error)
-            setLoading(false)
-        }
-    }
-
-    const verifyOtp = async () => {
-        setMessage("")
-        try {
-            const result = await axios.post(`${serverUrl}/api/order/verify-delivery-otp`, {
-                orderId: currentOrder._id,
-                shopOrderId: currentOrder.shopOrder._id,
-                otp
-            }, { withCredentials: true })
-            console.log(result.data)
-            setMessage(result.data.message)
-            location.reload()
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
     const handleTodayDeliveries = async () => {
         try {
             const result = await axios.get(`${serverUrl}/api/order/get-today-deliveries`, { withCredentials: true })
-            console.log(result.data)
-            setTodayDeliveries(result.data)
+            setTodayDeliveries(Array.isArray(result.data) ? result.data : [])
         } catch (error) {
             console.log(error)
         }
@@ -259,8 +260,8 @@ function DeliveryBoy() {
                 <div className='bg-white rounded-2xl shadow-md p-4 sm:p-5 flex flex-col justify-start items-center w-full border border-orange-100 text-center gap-2'>
                     <h1 className='text-xl font-bold text-[#ff4d2d]'>Welcome, {userData.fullName}</h1>
                     <p className='text-[#ff4d2d]'>
-                        <span className='font-semibold'>Latitude:</span> {deliveryBoyLocation?.lat},{' '}
-                        <span className='font-semibold'>Longitude:</span> {deliveryBoyLocation?.lon}
+                        <span className='font-semibold'>Latitude:</span> {deliveryBoyLocation?.lat?.toFixed(5)},{' '}
+                        <span className='font-semibold'>Longitude:</span> {deliveryBoyLocation?.lon?.toFixed(5)}
                     </p>
                 </div>
 
@@ -277,9 +278,9 @@ function DeliveryBoy() {
                     </ResponsiveContainer>
                     <div className='max-w-sm mx-auto mt-6 p-6 bg-white rounded-2xl shadow-lg text-center'>
                         <h1 className='text-xl font-semibold text-gray-800 mb-2'>Today's Earning</h1>
-                        <span className='text-3xl font-bold text-green-600'>₹{totalEarning}</span>
+                        <span className='text-3xl font-bold text-green-600'>Rs.{totalEarning}</span>
                         {earningFlash > 0 && (
-                            <p className='text-green-500 font-bold mt-2 animate-bounce'>+₹{earningFlash}</p>
+                            <p className='text-green-500 font-bold mt-2 animate-bounce'>+Rs.{earningFlash}</p>
                         )}
                     </div>
                 </div>
@@ -294,9 +295,9 @@ function DeliveryBoy() {
                                         <div>
                                             <p className='text-sm font-semibold'>{a?.shopName}</p>
                                             <p className='text-sm text-gray-500'>
-                                                <span className='font-semibold'>Delivery Address:</span> {a?.deliveryAddress.text}
+                                                <span className='font-semibold'>Delivery Address:</span> {a?.deliveryAddress?.text}
                                             </p>
-                                            <p className='text-xs text-gray-400'>{a.items.length} items | {a.subtotal}</p>
+                                            <p className='text-xs text-gray-400'>{a.items?.length} items | Rs.{a.subtotal}</p>
                                         </div>
                                         <button
                                             className='bg-orange-500 text-white px-4 py-1 rounded-lg text-sm hover:bg-orange-600'
@@ -315,24 +316,23 @@ function DeliveryBoy() {
 
                 {currentOrder && (
                     <div className='bg-white rounded-2xl p-4 sm:p-5 shadow-md w-full border border-orange-100'>
-                        <h2 className='text-lg font-bold mb-3'>📦 Current Order</h2>
+                        <h2 className='text-lg font-bold mb-3'>Current Order</h2>
                         <div className='border rounded-lg p-4 mb-3'>
-                            <p className='font-semibold text-sm'>{currentOrder?.shopOrder.shop.shopName}</p>
-                            <p className='text-sm text-gray-500'>{currentOrder.deliveryAddress.text}</p>
+                            <p className='font-semibold text-sm'>{currentOrder?.shopOrder?.shop?.shopName || currentOrder?.shopOrder?.shop?.name}</p>
+                            <p className='text-sm text-gray-500'>{currentOrder.deliveryAddress?.text}</p>
                             <p className='text-xs text-gray-400'>
-                                {currentOrder.shopOrder.shopOrderItems.length} items | ₹{currentOrder.shopOrder.subtotal}
+                                {currentOrder.shopOrder?.shopOrderItems?.length} items | Rs.{currentOrder.shopOrder?.subtotal}
                             </p>
                         </div>
 
-                        {/* FIX: restaurantLocation pass केलं */}
                         <DeliveryBoyTracking data={{
                             deliveryBoyLocation: deliveryBoyLocation || {
                                 lat: userData?.location?.coordinates?.[1],
                                 lon: userData?.location?.coordinates?.[0]
                             },
                             customerLocation: {
-                                lat: currentOrder.deliveryAddress.latitude,
-                                lon: currentOrder.deliveryAddress.longitude
+                                lat: currentOrder.deliveryAddress?.latitude,
+                                lon: currentOrder.deliveryAddress?.longitude
                             },
                             restaurantLocation: {
                                 lat: currentOrder.shopOrder?.shop?.location?.coordinates?.[1],
@@ -346,45 +346,29 @@ function DeliveryBoy() {
                                 onClick={startSimulation}
                                 disabled={!isOrderActive || isSimulating}
                             >
-                                ▶ Simulate Delivery
+                                Simulate Delivery
                             </button>
                             <button
                                 className='flex-1 bg-gray-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-800 disabled:opacity-60'
                                 onClick={stopSimulation}
                                 disabled={!isSimulating}
                             >
-                                ⏹ Stop
+                                Stop
                             </button>
                         </div>
 
-                        {!showOtpBox ? (
+                        {deliveredMsg ? (
+                            <div className={`mt-4 w-full text-center font-semibold py-3 px-4 rounded-xl ${deliveredMsg.includes('Successfully') ? 'bg-green-50 text-green-600 border border-green-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                                {deliveredMsg}
+                            </div>
+                        ) : (
                             <button
-                                className='mt-4 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200'
-                                onClick={sendOtp}
-                                disabled={loading}
+                                className='mt-4 w-full bg-green-500 text-white font-semibold py-3 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200 disabled:opacity-60'
+                                onClick={markAsDelivered}
+                                disabled={loading || !isOrderActive}
                             >
                                 {loading ? <ClipLoader size={20} color='white' /> : "Mark As Delivered"}
                             </button>
-                        ) : (
-                            <div className='mt-4 p-4 border rounded-xl bg-gray-50'>
-                                <p className='text-sm font-semibold mb-2'>
-                                    Enter OTP sent to <span className='text-orange-500'>{currentOrder.user.fullName}</span>
-                                </p>
-                                <input
-                                    type="text"
-                                    className='w-full border px-3 py-2 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-orange-400'
-                                    placeholder='Enter OTP'
-                                    onChange={(e) => setOtp(e.target.value)}
-                                    value={otp}
-                                />
-                                {message && <p className='text-center text-green-400 text-2xl mb-4'>{message}</p>}
-                                <button
-                                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition-all"
-                                    onClick={verifyOtp}
-                                >
-                                    Submit OTP
-                                </button>
-                            </div>
                         )}
                     </div>
                 )}

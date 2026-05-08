@@ -8,7 +8,7 @@ function Landing() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (userData) { navigate("/") }
+    if (userData) { navigate("/home") }
     setTimeout(() => setVisible(true), 100)
   }, [userData])
 
@@ -28,11 +28,11 @@ function Landing() {
       <section style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"100px 5% 60px", background:"radial-gradient(ellipse at top,#ffe8e2 0%,#fff9f6 60%)", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(30px)", transition:"all 0.8s ease" }}>
         <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#fff3f0", border:"1px solid #ffcbbf", borderRadius:25, padding:"6px 16px", marginBottom:28, fontSize:13, color:"#ff4d2d", fontWeight:600 }}>?? Now available in your city</div>
         <h1 style={{ fontSize:"clamp(40px,7vw,80px)", fontWeight:900, lineHeight:1.1, color:"#1a1a1a", marginBottom:20, letterSpacing:"-2px" }}>
-          Hungry? <span style={{ color:"#ff4d2d" }}>We've got</span><br/>you covered ??
+          Hungry? <span style={{ color:"#ff4d2d" }}>We have got</span><br/>you covered ??
         </h1>
         <p style={{ fontSize:"clamp(16px,2.5vw,20px)", color:"#666", maxWidth:520, lineHeight:1.6, marginBottom:40 }}>Order from your favourite restaurants, track delivery live, and enjoy hot meals at your doorstep.</p>
         <div style={{ display:"flex", gap:16, flexWrap:"wrap", justifyContent:"center" }}>
-          <button onClick={() => navigate("/signup")} style={{ padding:"16px 40px", borderRadius:50, background:"#ff4d2d", color:"white", fontWeight:800, fontSize:17, border:"none", cursor:"pointer", boxShadow:"0 8px 30px rgba(255,77,45,0.35)" }}>Order Now ?</button>
+          <button onClick={() => navigate("/signup")} style={{ padding:"16px 40px", borderRadius:50, background:"#ff4d2d", color:"white", fontWeight:800, fontSize:17, border:"none", cursor:"pointer", boxShadow:"0 8px 30px rgba(255,77,45,0.35)" }}>Order Now ??</button>
           <button onClick={() => navigate("/signin")} style={{ padding:"16px 40px", borderRadius:50, background:"white", color:"#1a1a1a", fontWeight:700, fontSize:17, border:"2px solid #e5e5e5", cursor:"pointer" }}>Sign In</button>
         </div>
         <div style={{ marginTop:60, fontSize:48, display:"flex", gap:20, flexWrap:"wrap", justifyContent:"center", opacity:0.7 }}>
@@ -45,7 +45,7 @@ function Landing() {
         <p style={{ textAlign:"center", color:"#888", fontSize:16, marginBottom:50 }}>One platform, three roles</p>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))", gap:24, maxWidth:1000, margin:"0 auto" }}>
           {[
-            { icon:"???", title:"Customer", desc:"Order delicious food from restaurants near you", color:"#ff4d2d", bg:"#fff3f0" },
+            { icon:"??", title:"Customer", desc:"Order delicious food from restaurants near you", color:"#ff4d2d", bg:"#fff3f0" },
             { icon:"??", title:"Restaurant Owner", desc:"List your restaurant and reach more customers", color:"#f59e0b", bg:"#fffbeb" },
             { icon:"??", title:"Delivery Partner", desc:"Earn money by delivering orders in your city", color:"#10b981", bg:"#f0fdf4" }
           ].map((r,i) => (

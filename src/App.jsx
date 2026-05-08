@@ -86,26 +86,29 @@ function App() {
     <>
       <Routes>
         {/* Auth routes */}
-        <Route path='/signup' element={!isLoggedIn ? <SignUp /> : <Navigate to={"/"} />} />
-        <Route path='/signin' element={!isLoggedIn ? <SignIn /> : <Navigate to={"/"} />} />
-        <Route path='/forgot-password' element={!isLoggedIn ? <ForgotPassword /> : <Navigate to={"/"} />} />
+        <Route path='/signup' element={!isLoggedIn ? <SignUp /> : <Navigate to={"/home"} />} />
+        <Route path='/signin' element={!isLoggedIn ? <SignIn /> : <Navigate to={"/home"} />} />
+        <Route path='/forgot-password' element={!isLoggedIn ? <ForgotPassword /> : <Navigate to={"/home"} />} />
 
-        {/* Home */}
-        <Route path='/' element={isLoggedIn ? <Home /> : <Landing />} />
+        {/* Landing - always shows */}
+        <Route path='/' element={<Landing />} />
+
+        {/* Home - role based dashboard */}
+        <Route path='/home' element={isLoggedIn ? <Home /> : <Navigate to={"/"} />} />
 
         {/* Owner only routes */}
-        <Route path='/create-edit-shop' element={isOwner ? <CreateEditShop /> : <Navigate to={"/"} />} />
-        <Route path='/add-item' element={isOwner ? <AddItem /> : <Navigate to={"/"} />} />
-        <Route path='/edit-item/:itemId' element={isOwner ? <EditItem /> : <Navigate to={"/"} />} />
-        <Route path='/owner-panel' element={isOwner ? <OwnerDashboard /> : <Navigate to={"/"} />} />
+        <Route path='/create-edit-shop' element={isOwner ? <CreateEditShop /> : <Navigate to={"/home"} />} />
+        <Route path='/add-item' element={isOwner ? <AddItem /> : <Navigate to={"/home"} />} />
+        <Route path='/edit-item/:itemId' element={isOwner ? <EditItem /> : <Navigate to={"/home"} />} />
+        <Route path='/owner-panel' element={isOwner ? <OwnerDashboard /> : <Navigate to={"/home"} />} />
 
         {/* User only routes */}
-        <Route path='/cart' element={isUser ? <CartPage /> : <Navigate to={"/"} />} />
-        <Route path='/checkout' element={isUser ? <CheckOut /> : <Navigate to={"/"} />} />
-        <Route path='/order-placed' element={isUser ? <OrderPlaced /> : <Navigate to={"/"} />} />
-        <Route path='/shop/:shopId' element={isUser ? <Shop /> : <Navigate to={"/"} />} />
-        <Route path='/favourites' element={isUser ? <Favourites /> : <Navigate to={"/"} />} />
-        <Route path='/ai-meal-planner' element={isUser ? <AIMealPlanner /> : <Navigate to={"/"} />} />
+        <Route path='/cart' element={isUser ? <CartPage /> : <Navigate to={"/home"} />} />
+        <Route path='/checkout' element={isUser ? <CheckOut /> : <Navigate to={"/home"} />} />
+        <Route path='/order-placed' element={isUser ? <OrderPlaced /> : <Navigate to={"/home"} />} />
+        <Route path='/shop/:shopId' element={isUser ? <Shop /> : <Navigate to={"/home"} />} />
+        <Route path='/favourites' element={isUser ? <Favourites /> : <Navigate to={"/home"} />} />
+        <Route path='/ai-meal-planner' element={isUser ? <AIMealPlanner /> : <Navigate to={"/home"} />} />
 
         {/* Shared routes */}
         <Route path='/help' element={isLoggedIn ? <HelpPage /> : <Navigate to={"/signin"} />} />
@@ -130,4 +133,3 @@ function App() {
 }
 
 export default App
-

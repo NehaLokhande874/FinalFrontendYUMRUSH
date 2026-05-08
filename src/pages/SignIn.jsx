@@ -34,7 +34,7 @@ function SignIn() {
             dispatch(setUserData(result.data))
             setErr("")
             setLoading(false)
-            navigate("/") // ✅ FIXED: redirect after login
+            navigate("/home")
         } catch (error) {
             setErr(error?.response?.data?.message || "Sign in failed")
             setLoading(false)
@@ -49,7 +49,7 @@ function SignIn() {
                 email: result.user.email,
             }, { withCredentials: true })
             dispatch(setUserData(data))
-            navigate("/") // ✅ FIXED: redirect after google login
+            navigate("/home")
         } catch (error) {
             console.log(error)
             setErr("Google sign in failed")
