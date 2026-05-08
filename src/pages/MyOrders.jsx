@@ -67,7 +67,10 @@ function MyOrders() {
 
                 {userData.role === "user" && (
                   <div className='space-y-2 mt-4'>
-                    {order.shopOrders?.status === "delivered" && (
+                    {(() => {
+                      const shopOrdersArray = Array.isArray(order.shopOrders) ? order.shopOrders : (order.shopOrders ? [order.shopOrders] : []);
+                      return shopOrdersArray.some(so => so.status === "delivered");
+                    })() && (
                       <div className='flex flex-col gap-2'>
                         {ratedOrderIds.has(order._id) ? (
                           <div className="w-full py-2 bg-green-50 text-green-600 font-bold rounded-xl text-center border border-green-100 italic">
@@ -84,7 +87,11 @@ function MyOrders() {
                             Rate Items
                           </button>
                         )}
-                        <ComplaintForm orderId={order._id} shopId={order.shopOrders.shop?._id || order.shopOrders.shop} />
+                        <ComplaintForm orderId={order._id} shopId={
+                          Array.isArray(order.shopOrders)
+                            ? (order.shopOrders.find(so => so.status === 'delivered')?.shop?._id || order.shopOrders.find(so => so.status === 'delivered')?.shop)
+                            : (order.shopOrders?.shop?._id || order.shopOrders?.shop)
+                        } />
                       </div>
                     )}
                   </div>

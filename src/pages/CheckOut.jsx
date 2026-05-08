@@ -259,6 +259,10 @@ function CheckOut() {
   }
 
   const openRazorpayWindow = (orderId, razorOrder) => {
+    if (!window.Razorpay) {
+      toast.error("Payment Gateway failed to load. Please check your internet connection or disable adblockers.");
+      return;
+    }
     const options = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       amount: razorOrder.amount,

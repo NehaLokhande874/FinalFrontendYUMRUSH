@@ -33,31 +33,33 @@ function UserOrderCard({ data }) {
         }
     }
 
+    const shopOrdersArray = Array.isArray(data?.shopOrders) ? data.shopOrders : (data?.shopOrders ? [data.shopOrders] : [])
+
     const handleReorder = () => {
-        data.shopOrders.forEach(so => {
-            so.shopOrderItems.forEach(item => {
+        shopOrdersArray.forEach(so => {
+            so.shopOrderItems?.forEach(item => {
                 dispatch(addToCart({
-                    id: item.item._id || item.item,
+                    id: item.item?._id || item.item,
                     name: item.name,
                     price: item.price,
-                    image: item.item.image || item.image,
+                    image: item.item?.image || item.image,
                     quantity: item.quantity,
-                    shop: so.shop
+                    shop: so.shop?._id || so.shop
                 }))
             })
         })
         navigate('/check-out')
     }
 
-    const isOngoing = data.shopOrders?.some(so => so.status !== 'delivered' && so.status !== 'rejected')
-    const isDelivered = data.shopOrders?.every(so => so.status === 'delivered')
+    const isOngoing = shopOrdersArray.some(so => so.status !== 'delivered' && so.status !== 'rejected')
+    const isDelivered = shopOrdersArray.length > 0 && shopOrdersArray.every(so => so.status === 'delivered')
 
     return (
         <div className='bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-5 transition-shadow hover:shadow-md'>
             <div className='flex justify-between items-center border-b border-gray-100 pb-3'>
                 <div>
                     <h3 className='font-black text-lg text-gray-800 tracking-tight'>
-                        Order #{data._id.slice(-8).toUpperCase()}
+                        Order #{data?._id?.slice(-8).toUpperCase()}
                     </h3>
                     <p className='text-xs font-semibold text-gray-500 mt-0.5'>
                         {formatDate(data.createdAt)}
@@ -70,21 +72,21 @@ function UserOrderCard({ data }) {
                     <span className={`text-sm font-black uppercase tracking-wide ${
                         isDelivered ? 'text-green-600' : 'text-[#fc8019]'
                     }`}>
-                        {data.shopOrders?.[0]?.status}
+                        {shopOrdersArray[0]?.status}
                     </span>
                 </div>
             </div>
 
             <div className="space-y-4">
-                {data.shopOrders?.map((shopOrder, index) => (
+                {shopOrdersArray.map((shopOrder, index) => (
                     <div className='border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-3' key={index}>
                         <div className="flex justify-between items-center">
-                            <p className="font-bold text-gray-800">{shopOrder.shop.shopName}</p>
+                            <p className="font-bold text-gray-800">{shopOrder?.shop?.shopName || shopOrder?.shop?.name || "Shop"}</p>
                             <span className="text-sm font-black text-gray-800">₹{shopOrder.subtotal}</span>
                         </div>
 
                         <div className='flex flex-col gap-3'>
-                            {shopOrder.shopOrderItems.map((item, idx) => (
+                            {shopOrder.shopOrderItems?.map((item, idx) => (
                                 <div key={idx} className='flex items-center justify-between bg-white border border-gray-100 rounded-lg p-3 shadow-sm'>
                                     <div className="flex items-center gap-3">
                                         <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
@@ -110,12 +112,12 @@ function UserOrderCard({ data }) {
                 <div className="bg-[#fff9f6] border border-orange-100 rounded-xl p-4 mt-4">
                     <h4 className="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wide">Rate Your Items</h4>
                     <div className="space-y-3">
-                        {data.shopOrders?.map(so => 
-                            so.shopOrderItems.map((item, idx) => {
+                        {shopOrdersArray.map(so => 
+                            so.shopOrderItems?.map((item, idx) => {
                                 const itemId = item.item?._id || item.item;
                                 const currentRating = selectedRating[itemId] || 0;
                                 return (
-                                <div key={idx} className="flex justify-between items-center bg-white p-2 rounded-lg border border-orange-50 shadow-sm">
+                                <div key={`${so._id}-${idx}`} className="flex justify-between items-center bg-white p-2 rounded-lg border border-orange-50 shadow-sm">
                                     <p className="text-sm font-semibold text-gray-700 truncate max-w-[50%]">{item.name}</p>
                                     <div className="flex gap-1">
                                         {[1, 2, 3, 4, 5].map((star) => (
